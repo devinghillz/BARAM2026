@@ -1,0 +1,34 @@
+[
+  {
+    "fold_name": "fold_1_2024Q1",
+    "validation_period": "2024Q1",
+    "validation_issue_start": "2024-01-01 13:00:00",
+    "validation_issue_end": "2024-03-31 13:00:00",
+    "train_row_count": 17532,
+    "validation_row_count": 2184
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "validation_period": "2024Q2",
+    "validation_issue_start": "2024-04-01 13:00:00",
+    "validation_issue_end": "2024-06-30 13:00:00",
+    "train_row_count": 19716,
+    "validation_row_count": 2184
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "validation_period": "2024Q3",
+    "validation_issue_start": "2024-07-01 13:00:00",
+    "validation_issue_end": "2024-09-30 13:00:00",
+    "train_row_count": 21900,
+    "validation_row_count": 2208
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "validation_period": "2024Q4",
+    "validation_issue_start": "2024-10-01 13:00:00",
+    "validation_issue_end": "2024-12-30 13:00:00",
+    "train_row_count": 24108,
+    "validation_row_count": 2184
+  }
+]

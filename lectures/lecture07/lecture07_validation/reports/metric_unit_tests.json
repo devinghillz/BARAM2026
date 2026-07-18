@@ -47,5 +47,9 @@
     "test_name": "group_equal_weighting",
     "passed": true,
     "row_weighted_score": 0.8428571428571429
+  },
+  {
+    "test_name": "prediction_key_coverage",
+    "passed": true
   }
 ]

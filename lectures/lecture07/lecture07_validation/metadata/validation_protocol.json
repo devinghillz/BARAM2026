@@ -11,6 +11,8 @@
   "train_policy": "expanding",
   "label_purge": true,
   "metric": "official_score",
+  "primary_selection_metric": "concatenated_oof_official_score",
+  "fold_scores": "stability_diagnostics",
   "group_weighting": "equal",
   "eligibility_threshold": 0.1,
   "settlement_thresholds": [

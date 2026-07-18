@@ -12,5 +12,7 @@
   "metric_unit_tests_passed": true,
   "no_shared_issue_batch": true,
   "label_purge_checked": true,
-  "prediction_clipping": false
+  "year_block_audit_checked": true,
+  "prediction_clipping": false,
+  "primary_selection_metric": "concatenated_oof_official_score"
 }

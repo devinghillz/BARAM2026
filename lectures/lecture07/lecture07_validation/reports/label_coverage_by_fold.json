@@ -1,0 +1,194 @@
+[
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "train",
+    "group_id": 1,
+    "row_count": 17532,
+    "label_count": 17434,
+    "eligible_count": 10925
+  },
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "train",
+    "group_id": 2,
+    "row_count": 17532,
+    "label_count": 17435,
+    "eligible_count": 10914
+  },
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "train",
+    "group_id": 3,
+    "row_count": 17532,
+    "label_count": 8772,
+    "eligible_count": 4847
+  },
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "validation",
+    "group_id": 1,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1296
+  },
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "validation",
+    "group_id": 2,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1319
+  },
+  {
+    "fold_name": "fold_1_2024Q1",
+    "role": "validation",
+    "group_id": 3,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1286
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "train",
+    "group_id": 1,
+    "row_count": 19716,
+    "label_count": 19618,
+    "eligible_count": 12217
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "train",
+    "group_id": 2,
+    "row_count": 19716,
+    "label_count": 19619,
+    "eligible_count": 12228
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "train",
+    "group_id": 3,
+    "row_count": 19716,
+    "label_count": 10956,
+    "eligible_count": 6129
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "validation",
+    "group_id": 1,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1251
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "validation",
+    "group_id": 2,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1262
+  },
+  {
+    "fold_name": "fold_2_2024Q2",
+    "role": "validation",
+    "group_id": 3,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1122
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "train",
+    "group_id": 1,
+    "row_count": 21900,
+    "label_count": 21802,
+    "eligible_count": 13480
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "train",
+    "group_id": 2,
+    "row_count": 21900,
+    "label_count": 21803,
+    "eligible_count": 13502
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "train",
+    "group_id": 3,
+    "row_count": 21900,
+    "label_count": 13140,
+    "eligible_count": 7263
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "validation",
+    "group_id": 1,
+    "row_count": 2208,
+    "label_count": 2202,
+    "eligible_count": 1088
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "validation",
+    "group_id": 2,
+    "row_count": 2208,
+    "label_count": 2202,
+    "eligible_count": 1084
+  },
+  {
+    "fold_name": "fold_3_2024Q3",
+    "role": "validation",
+    "group_id": 3,
+    "row_count": 2208,
+    "label_count": 2202,
+    "eligible_count": 979
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "train",
+    "group_id": 1,
+    "row_count": 24108,
+    "label_count": 24004,
+    "eligible_count": 14556
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "train",
+    "group_id": 2,
+    "row_count": 24108,
+    "label_count": 24005,
+    "eligible_count": 14574
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "train",
+    "group_id": 3,
+    "row_count": 24108,
+    "label_count": 15342,
+    "eligible_count": 8230
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "validation",
+    "group_id": 1,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1347
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "validation",
+    "group_id": 2,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1305
+  },
+  {
+    "fold_name": "fold_4_2024Q4",
+    "role": "validation",
+    "group_id": 3,
+    "row_count": 2184,
+    "label_count": 2184,
+    "eligible_count": 1172
+  }
+]

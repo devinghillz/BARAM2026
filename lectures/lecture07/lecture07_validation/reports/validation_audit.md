@@ -5,6 +5,7 @@
 - Issue batch count: 1,096
 - Issue batch size: 24
 - Metric unit tests passed: True
+- Primary selection metric: `concatenated_oof_official_score`
 - Prediction clipping in metric: False
 
 | fold | validation period | train rows | validation rows | issue start | issue end |

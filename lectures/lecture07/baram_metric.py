@@ -124,3 +124,33 @@ def evaluate_baram_score(
         },
         group_metric_frame,
     )
+
+
+def audit_prediction_coverage(prediction_frame: pd.DataFrame, expected_forecast_times: pd.Series) -> None:
+    actual_group_ids = set(prediction_frame["group_id"].dropna().astype(int).unique())
+    if actual_group_ids != set(GROUP_IDS):
+        raise ValueError("예측 group_id가 1, 2, 3과 다릅니다.")
+
+    expected = pd.MultiIndex.from_product(
+        [pd.DatetimeIndex(expected_forecast_times).unique(), GROUP_IDS],
+        names=["forecast_kst_dtm", "group_id"],
+    )
+    actual = pd.MultiIndex.from_frame(prediction_frame[["forecast_kst_dtm", "group_id"]])
+    if actual.has_duplicates:
+        raise ValueError("시각·그룹 예측이 중복됩니다.")
+    missing = expected.difference(actual)
+    unexpected = actual.difference(expected)
+    if len(missing) > 0:
+        raise ValueError(f"예측 누락 key: {len(missing):,}개")
+    if len(unexpected) > 0:
+        raise ValueError(f"예상 밖 key: {len(unexpected):,}개")
+
+
+def evaluate_concatenated_oof(
+    fold_prediction_frames: list[pd.DataFrame],
+    capacity_by_group: dict[int, float],
+) -> tuple[dict[str, float], pd.DataFrame]:
+    oof = pd.concat(fold_prediction_frames, axis=0, ignore_index=True)
+    expected_times = oof["forecast_kst_dtm"].drop_duplicates().sort_values()
+    audit_prediction_coverage(oof, expected_times)
+    return evaluate_baram_score(oof, capacity_by_group)

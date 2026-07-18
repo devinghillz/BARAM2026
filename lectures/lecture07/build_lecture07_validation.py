@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from baram_metric import GROUP_IDS, evaluate_baram_score, extract_capacity_by_group
+from baram_metric import GROUP_IDS, audit_prediction_coverage, evaluate_baram_score, evaluate_concatenated_oof, extract_capacity_by_group
 
 
 TIME_KEYS = ["forecast_kst_dtm", "data_available_kst_dtm"]
@@ -71,10 +71,17 @@ def build_issue_quarter_folds(frame: pd.DataFrame, validation_year: int = 2024):
     return folds, manifest
 
 
-def build_year_block_fold(frame: pd.DataFrame, validation_year: int = 2024) -> dict[str, object]:
+def build_year_block_fold(frame: pd.DataFrame, validation_year: int = 2024) -> tuple[dict[str, object], pd.DataFrame]:
     validation_mask = frame["data_available_kst_dtm"].dt.year.eq(validation_year)
     validation_issue_start = frame.loc[validation_mask, "data_available_kst_dtm"].min()
     train_mask = frame["data_available_kst_dtm"].lt(validation_issue_start) & frame["forecast_kst_dtm"].lt(validation_issue_start)
+    excluded_mask = ~(train_mask | validation_mask)
+    assignment = frame[["row_id", *TIME_KEYS]].copy()
+    assignment["split_role"] = np.select(
+        [train_mask, validation_mask, excluded_mask],
+        ["train", "validation", "excluded_by_purge"],
+        default="excluded_by_purge",
+    )
     return {
         "fold_name": f"stress_{validation_year}_year_block",
         "validation_period": str(validation_year),
@@ -82,8 +89,9 @@ def build_year_block_fold(frame: pd.DataFrame, validation_year: int = 2024) -> d
         "validation_issue_end": frame.loc[validation_mask, "data_available_kst_dtm"].max(),
         "train_row_count": int(train_mask.sum()),
         "validation_row_count": int(validation_mask.sum()),
+        "excluded_by_purge_row_count": int(excluded_mask.sum()),
         "primary_cv_included": False,
-    }
+    }, assignment
 
 
 def audit_issue_batch_size(frame: pd.DataFrame, expected_size: int = 24) -> None:
@@ -99,6 +107,17 @@ def audit_fold(frame: pd.DataFrame, train_mask: pd.Series, validation_mask: pd.S
         raise ValueError("Train/Validation에 같은 예보 발행시각이 있습니다.")
     if not frame.loc[train_mask, "forecast_kst_dtm"].max() < frame.loc[validation_mask, "data_available_kst_dtm"].min():
         raise ValueError("Validation 시작 이후의 target Label이 Train에 포함됐습니다.")
+
+
+def audit_year_block(frame: pd.DataFrame, assignment: pd.DataFrame, validation_year: int = 2024) -> None:
+    train_mask = assignment["split_role"].eq("train")
+    validation_mask = assignment["split_role"].eq("validation")
+    audit_fold(frame, train_mask, validation_mask)
+    validation = frame.loc[validation_mask]
+    if set(validation["data_available_kst_dtm"].dt.year.unique()) != {validation_year}:
+        raise ValueError("Year block Validation이 2024년 발행시각이 아닙니다.")
+    if len(validation) != 8760:
+        raise ValueError("Year block Validation 행 수가 8,760이 아닙니다.")
 
 
 def label_coverage(frame: pd.DataFrame, folds: dict[str, dict[str, pd.Series]], capacity_by_group: dict[int, float]) -> pd.DataFrame:
@@ -140,6 +159,8 @@ def protocol() -> dict[str, object]:
         "train_policy": "expanding",
         "label_purge": True,
         "metric": "official_score",
+        "primary_selection_metric": "concatenated_oof_official_score",
+        "fold_scores": "stability_diagnostics",
         "group_weighting": "equal",
         "eligibility_threshold": 0.10,
         "settlement_thresholds": [0.06, 0.08],
@@ -201,6 +222,17 @@ def run_metric_unit_tests(capacity_by_group: dict[int, float]) -> list[dict[str,
     if np.isclose(summary["score"], row_weighted_score, atol=1e-10):
         raise ValueError("그룹 동일 가중 테스트가 행 가중 평균과 구분되지 않습니다.")
     results.append({"test_name": "group_equal_weighting", "passed": True, "row_weighted_score": row_weighted_score})
+
+    coverage_frame = unit_test_frame(0.0, capacity_by_group)
+    audit_prediction_coverage(coverage_frame, coverage_frame["forecast_kst_dtm"].drop_duplicates())
+    evaluate_concatenated_oof([coverage_frame], capacity_by_group)
+    missing_frame = coverage_frame.iloc[:-1].copy()
+    try:
+        audit_prediction_coverage(missing_frame, coverage_frame["forecast_kst_dtm"].drop_duplicates())
+    except ValueError:
+        results.append({"test_name": "prediction_key_coverage", "passed": True})
+    else:
+        raise ValueError("예측 key 완전성 테스트 실패")
     return results
 
 
@@ -222,7 +254,8 @@ def build_validation_package(project_root: Path) -> dict[str, object]:
     coverage = label_coverage(frame, folds, capacity_by_group)
     unit_tests = run_metric_unit_tests(capacity_by_group)
     assignments = fold_assignments(frame, folds)
-    year_block = build_year_block_fold(frame)
+    year_block, year_block_assignments = build_year_block_fold(frame)
+    audit_year_block(frame, year_block_assignments)
     audit = {
         "protocol_version": PROTOCOL_VERSION,
         "forecast_rows": int(len(frame)),
@@ -233,12 +266,15 @@ def build_validation_package(project_root: Path) -> dict[str, object]:
         "metric_unit_tests_passed": all(item["passed"] for item in unit_tests),
         "no_shared_issue_batch": True,
         "label_purge_checked": True,
+        "year_block_audit_checked": True,
         "prediction_clipping": False,
+        "primary_selection_metric": "concatenated_oof_official_score",
     }
     return {
         "capacity_by_group": capacity_by_group,
         "primary_manifest": primary_manifest,
         "year_block": year_block,
+        "year_block_assignments": year_block_assignments,
         "coverage": coverage,
         "unit_tests": unit_tests,
         "assignments": assignments,
@@ -260,12 +296,13 @@ def write_outputs(package: dict[str, object], output_dir: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)
 
     package["assignments"].to_csv(folds_dir / "primary_fold_assignments.csv", index=False, encoding="utf-8-sig")
-    package["primary_manifest"].to_csv(folds_dir / "primary_fold_manifest.csv", index=False, encoding="utf-8-sig")
+    write_json(package["primary_manifest"].to_dict("records"), folds_dir / "primary_fold_manifest.json")
+    package["year_block_assignments"].to_csv(folds_dir / "year_block_assignments.csv", index=False, encoding="utf-8-sig")
     write_json(package["year_block"], folds_dir / "year_block_manifest.json")
     write_json(package["protocol"], metadata_dir / "validation_protocol.json")
     write_json(package["capacity_by_group"], metadata_dir / "capacity_by_group.json")
     write_json(package["unit_tests"], reports_dir / "metric_unit_tests.json")
-    package["coverage"].to_csv(reports_dir / "label_coverage_by_fold.csv", index=False, encoding="utf-8-sig")
+    write_json(package["coverage"].to_dict("records"), reports_dir / "label_coverage_by_fold.json")
     write_json(package["audit"], reports_dir / "validation_audit.json")
     write_audit_markdown(package, reports_dir / "validation_audit.md")
 
@@ -281,6 +318,7 @@ def write_audit_markdown(package: dict[str, object], path: Path) -> None:
         f"- Issue batch count: {audit['issue_batch_count']:,}",
         f"- Issue batch size: {audit['issue_batch_size']}",
         f"- Metric unit tests passed: {audit['metric_unit_tests_passed']}",
+        f"- Primary selection metric: `{audit['primary_selection_metric']}`",
         f"- Prediction clipping in metric: {audit['prediction_clipping']}",
         "",
         "| fold | validation period | train rows | validation rows | issue start | issue end |",
