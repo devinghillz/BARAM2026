@@ -7,6 +7,14 @@
     ],
     "feature_count": 11
   },
+  "calendar_features": {
+    "row_scope": "forecast",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm"
+    ],
+    "feature_count": 3
+  },
   "wind_grid_features": {
     "row_scope": "forecast",
     "key_columns": [

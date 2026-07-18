@@ -14,6 +14,12 @@ python3 lectures/lecture06/build_lecture06_feature_candidates.py
 lectures/lecture06/lecture06_feature_candidates/
 ```
 
+GitHub에 올릴 작은 검증 산출물만 갱신하려면 다음을 사용한다.
+
+```bash
+python3 lectures/lecture06/build_lecture06_feature_candidates.py --metadata-only
+```
+
 ## 산출물
 
 대용량 feature block CSV는 로컬 재생성 산출물이라 git에는 올리지 않는다.
@@ -22,6 +28,8 @@ lectures/lecture06/lecture06_feature_candidates/
 shared/
   time_features_train.csv
   time_features_test.csv
+  calendar_features_train.csv
+  calendar_features_test.csv
   wind_grid_features_train.csv
   wind_grid_features_test.csv
   grid_statistics_train.csv

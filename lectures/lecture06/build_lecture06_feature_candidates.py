@@ -41,6 +41,21 @@ DIFFERENCE_PAIRS = [
     ("surface_pressure", "surface_0_sp", "surface_0_sp"),
     ("sea_level_pressure", "meanSea_0_prmsl", "meanSea_0_prmsl"),
 ]
+EXPECTED_SHAPES = {
+    "time_features": {"train": (26_304, 13), "test": (8_760, 13)},
+    "calendar_features": {"train": (26_304, 5), "test": (8_760, 5)},
+    "wind_grid_features": {"train": (26_304, 573), "test": (8_760, 573)},
+    "grid_statistics": {"train": (26_304, 372), "test": (8_760, 372)},
+    "physical_grid_features": {"train": (26_304, 404), "test": (8_760, 404)},
+    "center_nearest": {"train": (78_912, 119), "test": (26_280, 119)},
+    "turbine_nearest": {"train": (78_912, 119), "test": (26_280, 119)},
+    "idw_p1": {"train": (78_912, 119), "test": (26_280, 119)},
+    "idw_p2": {"train": (78_912, 119), "test": (26_280, 119)},
+    "model_difference_center_nearest": {"train": (78_912, 11), "test": (26_280, 11)},
+    "model_difference_turbine_nearest": {"train": (78_912, 11), "test": (26_280, 11)},
+    "model_difference_idw_p1": {"train": (78_912, 11), "test": (26_280, 11)},
+    "model_difference_idw_p2": {"train": (78_912, 11), "test": (26_280, 11)},
+}
 
 
 def load_lecture05_builder(project_root: Path):
@@ -81,6 +96,15 @@ def build_time_features(forecast_index: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def build_calendar_features(forecast_index: pd.DataFrame) -> pd.DataFrame:
+    result = forecast_index.copy()
+    ft = result["forecast_kst_dtm"]
+    result["day_of_month"] = ft.dt.day.astype("int8")
+    result["dayofweek"] = ft.dt.dayofweek.astype("int8")
+    result["is_weekend"] = result["dayofweek"].ge(5).astype("int8")
+    return result
+
+
 def add_wind_candidates(weather: pd.DataFrame, vector_pairs: list[tuple], proxy_pairs: list[tuple] | None = None):
     result = weather.copy()
     added = []
@@ -112,13 +136,18 @@ def candidate_values_to_wide(weather: pd.DataFrame, value_columns: list[str], pr
 
 def build_grid_statistics(weather: pd.DataFrame, value_columns: list[str], prefix: str) -> pd.DataFrame:
     grouped = weather.groupby(TIME_KEYS, sort=True)[value_columns]
+    complete = grouped.count().eq(weather["grid_id"].nunique())
+    mean = grouped.mean().where(complete)
+    std = grouped.std(ddof=0).where(complete)
+    minimum = grouped.min().where(complete)
+    maximum = grouped.max().where(complete)
     result = pd.concat(
         [
-            grouped.mean().add_suffix("__mean"),
-            grouped.std(ddof=0).add_suffix("__std"),
-            grouped.min().add_suffix("__min"),
-            grouped.max().add_suffix("__max"),
-            (grouped.max() - grouped.min()).add_suffix("__range"),
+            mean.add_suffix("__mean"),
+            std.add_suffix("__std"),
+            minimum.add_suffix("__min"),
+            maximum.add_suffix("__max"),
+            (maximum - minimum).add_suffix("__range"),
         ],
         axis=1,
     )
@@ -191,20 +220,29 @@ def weighted_project_long(weather: pd.DataFrame, weights: pd.DataFrame, value_co
     return weighted_sum.reset_index()
 
 
+def nullable_flag(source: pd.Series | pd.DataFrame, condition: pd.Series) -> pd.Series:
+    missing = source.isna().any(axis=1) if isinstance(source, pd.DataFrame) else source.isna()
+    return pd.Series(np.where(missing, np.nan, condition.astype("float32")), index=condition.index, dtype="float32")
+
+
 def build_physical_ldaps(weather: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     result = weather[TIME_KEYS + ["grid_id"]].copy()
+    rh = weather["heightAboveGround_2_r"]
     result = result.assign(
         t2m_c=weather["heightAboveGround_2_t"] - 273.15,
         dpt2m_c=weather["heightAboveGround_2_dpt"] - 273.15,
         temp_dewpoint_gap=weather["heightAboveGround_2_t"] - weather["heightAboveGround_2_dpt"],
         pressure_delta=weather["meanSea_0_prmsl"] - weather["surface_0_sp"],
         dry_air_density=weather["surface_0_sp"] / (RD * weather["heightAboveGround_2_t"]),
-        rh_over_100_flag=(weather["heightAboveGround_2_r"] > 100).astype("int8"),
+        rh_over_100_flag=nullable_flag(rh, rh > 100),
     )
     for column in ["etc_0_hcc", "etc_0_mcc", "etc_0_lcc", "etc_0_VLCDC"]:
-        result[f"{column}_fraction"] = weather[column] / 100.0
+        valid = weather[column].dropna()
+        if not valid.between(0.0, 1.0001).all():
+            raise ValueError(f"{column}: LDAPS 운량이 0~1 범위를 벗어났습니다.")
+        result[f"{column}_fraction"] = weather[column].astype("float32")
     for column in ["surface_0_avg_lsprate", "surface_0_lssrate", "surface_0_ncpcp", "surface_0_snol", "surface_0_SNOM"]:
-        result[f"{column}_positive_flag"] = (weather[column] > 0).astype("int8")
+        result[f"{column}_positive_flag"] = nullable_flag(weather[column], weather[column] > 0)
     return result, [column for column in result.columns if column not in [*TIME_KEYS, "grid_id"]]
 
 
@@ -227,7 +265,8 @@ def build_physical_gfs(weather: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     )
     for column in ["lowCloudLayer_0_lcc", "middleCloudLayer_0_mcc", "highCloudLayer_0_hcc", "atmosphere_0_tcc"]:
         result[f"{column}_fraction"] = weather[column] / 100.0
-    result["precip_positive_flag"] = ((weather["surface_0_prate"] > 0) | (weather["surface_0_tp"] > 0)).astype("int8")
+    precip_sources = weather[["surface_0_prate", "surface_0_tp"]]
+    result["precip_positive_flag"] = nullable_flag(precip_sources, (weather["surface_0_prate"] > 0) | (weather["surface_0_tp"] > 0))
     result["surface_0_prate_log1p"] = np.log1p(weather["surface_0_prate"].clip(lower=0))
     result["surface_0_tp_log1p"] = np.log1p(weather["surface_0_tp"].clip(lower=0))
     return result, [column for column in result.columns if column not in [*TIME_KEYS, "grid_id"]]
@@ -285,6 +324,8 @@ def registry_rows(block_name: str, frame: pd.DataFrame, keys: list[str], source:
 def registry_parent_columns(block_name: str) -> str:
     if block_name == "time_features":
         return "forecast_kst_dtm,data_available_kst_dtm"
+    if block_name == "calendar_features":
+        return "forecast_kst_dtm"
     if block_name == "wind_grid_features":
         return "u_component,v_component,grid_id"
     if block_name == "grid_statistics":
@@ -299,6 +340,8 @@ def registry_parent_columns(block_name: str) -> str:
 def registry_formula(block_name: str, spatial_method: str) -> str:
     if block_name == "time_features":
         return "calendar_and_lead_time"
+    if block_name == "calendar_features":
+        return "calendar_candidate_values"
     if block_name == "wind_grid_features":
         return "sqrt(u^2+v^2),unit_vector,speed_powers"
     if block_name == "grid_statistics":
@@ -324,6 +367,8 @@ def build_feature_candidates(project_root: Path):
 
     time_train = build_time_features(tables["train_forecast_index"])
     time_test = build_time_features(tables["test_forecast_index"])
+    calendar_train = build_calendar_features(tables["train_forecast_index"])
+    calendar_test = build_calendar_features(tables["test_forecast_index"])
 
     ldaps_train_wind, ldaps_wind_cols = add_wind_candidates(tables["ldaps_train_long"], LDAPS_VECTOR_PAIRS, LDAPS_PROXY_PAIRS)
     ldaps_test_wind, _ = add_wind_candidates(tables["ldaps_test_long"], LDAPS_VECTOR_PAIRS, LDAPS_PROXY_PAIRS)
@@ -378,6 +423,7 @@ def build_feature_candidates(project_root: Path):
 
     blocks = {
         "time_features": (time_train, time_test, TIME_KEYS, "shared", "time", "none", False),
+        "calendar_features": (calendar_train, calendar_test, TIME_KEYS, "shared", "time", "none", False),
         "wind_grid_features": (wind_grid_train, wind_grid_test, TIME_KEYS, "shared", "weather", "raw_grid", False),
         "grid_statistics": (grid_stats_train, grid_stats_test, TIME_KEYS, "shared", "weather", "all_grid", False),
         "physical_grid_features": (physical_train, physical_test, TIME_KEYS, "shared", "weather", "raw_grid", False),
@@ -395,6 +441,8 @@ def build_feature_candidates(project_root: Path):
 
 def audit_blocks(blocks: dict, weights: pd.DataFrame) -> None:
     for name, (train, test, keys, *_rest) in blocks.items():
+        if tuple(train.shape) != EXPECTED_SHAPES[name]["train"] or tuple(test.shape) != EXPECTED_SHAPES[name]["test"]:
+            raise ValueError(f"{name}: 예상 shape와 다릅니다.")
         if train.duplicated(keys).any() or test.duplicated(keys).any():
             raise ValueError(f"{name}: key 중복이 있습니다.")
         if list(train.columns) != list(test.columns):
@@ -430,10 +478,12 @@ def build_audit(blocks: dict, weights: pd.DataFrame, registry: pd.DataFrame) -> 
         "registry_rows": int(len(registry)),
         "registry_label_used_any": bool(registry["label_used"].any()),
         "registry_fit_required_any": bool(registry["fit_required"].any()),
+        "expected_shapes_checked": True,
+        "missing_policy": "preserve_nan_in_flags_and_require_complete_grid_statistics",
     }
 
 
-def write_outputs(blocks: dict, weights: pd.DataFrame, registry: pd.DataFrame, manifest: dict, audit: dict, output_dir: Path) -> None:
+def write_outputs(blocks: dict, weights: pd.DataFrame, registry: pd.DataFrame, manifest: dict, audit: dict, output_dir: Path, metadata_only: bool = False) -> None:
     shared_dir = output_dir / "shared"
     group_dir = output_dir / "group"
     metadata_dir = output_dir / "metadata"
@@ -441,10 +491,11 @@ def write_outputs(blocks: dict, weights: pd.DataFrame, registry: pd.DataFrame, m
     for directory in [shared_dir, group_dir, metadata_dir, reports_dir]:
         directory.mkdir(parents=True, exist_ok=True)
 
-    for name, (train, test, _keys, scope, *_rest) in blocks.items():
-        target_dir = group_dir if scope == "group" else shared_dir
-        save_csv(train, target_dir / f"{name}_train.csv")
-        save_csv(test, target_dir / f"{name}_test.csv")
+    if not metadata_only:
+        for name, (train, test, _keys, scope, *_rest) in blocks.items():
+            target_dir = group_dir if scope == "group" else shared_dir
+            save_csv(train, target_dir / f"{name}_train.csv")
+            save_csv(test, target_dir / f"{name}_test.csv")
     save_csv(weights, metadata_dir / "spatial_weights.csv")
     save_csv(registry, metadata_dir / "feature_registry.csv")
     (metadata_dir / "block_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
@@ -471,13 +522,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build Lecture 06 feature candidate blocks.")
     parser.add_argument("--project-root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent / "lecture06_feature_candidates")
+    parser.add_argument("--metadata-only", action="store_true", help="Write only metadata and audit files, not large feature block CSVs.")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     blocks, weights, registry, manifest, audit = build_feature_candidates(args.project_root)
-    write_outputs(blocks, weights, registry, manifest, audit, args.output_dir)
+    write_outputs(blocks, weights, registry, manifest, audit, args.output_dir, metadata_only=args.metadata_only)
     print(json.dumps({name: data["train_shape"] for name, data in audit["blocks"].items()}, ensure_ascii=False, indent=2))
 
 

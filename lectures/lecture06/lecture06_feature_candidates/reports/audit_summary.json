@@ -13,6 +13,19 @@
       "test_missing_cells": 0,
       "test_missing_rows": 0
     },
+    "calendar_features": {
+      "train_shape": [
+        26304,
+        5
+      ],
+      "test_shape": [
+        8760,
+        5
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 0,
+      "test_missing_rows": 0
+    },
     "wind_grid_features": {
       "train_shape": [
         26304,
@@ -49,7 +62,7 @@
         404
       ],
       "train_missing_cells": 0,
-      "test_missing_cells": 336,
+      "test_missing_cells": 400,
       "test_missing_rows": 3
     },
     "center_nearest": {
@@ -159,7 +172,9 @@
   },
   "weight_sum_min": 0.9999999999999998,
   "weight_sum_max": 1.0000000000000002,
-  "registry_rows": 1850,
+  "registry_rows": 1853,
   "registry_label_used_any": false,
-  "registry_fit_required_any": false
+  "registry_fit_required_any": false,
+  "expected_shapes_checked": true,
+  "missing_policy": "preserve_nan_in_flags_and_require_complete_grid_statistics"
 }
