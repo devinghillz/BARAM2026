@@ -1,0 +1,16 @@
+{
+  "protocol_version": "lecture07_v1",
+  "forecast_rows": 26304,
+  "issue_batch_count": 1096,
+  "issue_batch_size": 24,
+  "primary_fold_count": 4,
+  "capacity_by_group": {
+    "1": 21600.0,
+    "2": 21600.0,
+    "3": 21000.0
+  },
+  "metric_unit_tests_passed": true,
+  "no_shared_issue_batch": true,
+  "label_purge_checked": true,
+  "prediction_clipping": false
+}

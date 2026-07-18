@@ -1,0 +1,51 @@
+[
+  {
+    "test_name": "perfect",
+    "passed": true,
+    "summary": {
+      "score": 1.0,
+      "nmae": 0.0,
+      "one_minus_nmae": 1.0,
+      "ficr": 1.0
+    }
+  },
+  {
+    "test_name": "seven_percent",
+    "passed": true,
+    "summary": {
+      "score": 0.84,
+      "nmae": 0.07,
+      "one_minus_nmae": 0.9299999999999999,
+      "ficr": 0.75
+    }
+  },
+  {
+    "test_name": "eight_percent_boundary",
+    "passed": true,
+    "summary": {
+      "score": 0.835,
+      "nmae": 0.08,
+      "one_minus_nmae": 0.92,
+      "ficr": 0.75
+    }
+  },
+  {
+    "test_name": "eight_percent_exceeded",
+    "passed": true,
+    "summary": {
+      "score": 0.4599995,
+      "nmae": 0.080001,
+      "one_minus_nmae": 0.919999,
+      "ficr": 0.0
+    }
+  },
+  {
+    "test_name": "ten_percent_boundary_included",
+    "passed": true
+  },
+  {
+    "test_name": "group_equal_weighting",
+    "passed": true,
+    "row_weighted_score": 0.8428571428571429
+  }
+]

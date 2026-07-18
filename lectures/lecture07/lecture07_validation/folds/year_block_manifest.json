@@ -1,0 +1,9 @@
+{
+  "fold_name": "stress_2024_year_block",
+  "validation_period": "2024",
+  "validation_issue_start": "2024-01-01 13:00:00",
+  "validation_issue_end": "2024-12-30 13:00:00",
+  "train_row_count": 17532,
+  "validation_row_count": 8760,
+  "primary_cv_included": false
+}

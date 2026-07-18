@@ -1,0 +1,26 @@
+{
+  "protocol_version": "lecture07_v1",
+  "split_axis": "data_available_kst_dtm",
+  "validation_year": 2024,
+  "primary_folds": [
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4"
+  ],
+  "train_policy": "expanding",
+  "label_purge": true,
+  "metric": "official_score",
+  "group_weighting": "equal",
+  "eligibility_threshold": 0.1,
+  "settlement_thresholds": [
+    0.06,
+    0.08
+  ],
+  "settlement_rates": [
+    4,
+    3,
+    0
+  ],
+  "prediction_clipping": false
+}
