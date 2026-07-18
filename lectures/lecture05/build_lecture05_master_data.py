@@ -184,6 +184,42 @@ def audit_availability_time(weather: pd.DataFrame, name: str) -> None:
         raise ValueError(f"{name}: 하나의 예측시각에 여러 이용 가능 시각이 있습니다.")
 
 
+def audit_forecast_availability(forecast_index: pd.DataFrame, name: str) -> dict[str, object]:
+    missing_columns = set(TIME_KEYS) - set(forecast_index.columns)
+    if missing_columns:
+        raise ValueError(f"{name}: 시간키가 없습니다: {sorted(missing_columns)}")
+    if forecast_index[TIME_KEYS].isna().any().any():
+        raise ValueError(f"{name}: 시간키에 결측이 있습니다.")
+    if forecast_index.duplicated(TIME_KEYS).any():
+        raise ValueError(f"{name}: 시간키가 중복됩니다.")
+    if not forecast_index["data_available_kst_dtm"].lt(forecast_index["forecast_kst_dtm"]).all():
+        raise ValueError(f"{name}: 예측 대상 이후 이용 가능한 예보가 있습니다.")
+
+    lead_hour = (
+        forecast_index["forecast_kst_dtm"]
+        .sub(forecast_index["data_available_kst_dtm"])
+        .dt.total_seconds()
+        .div(3600.0)
+    )
+    if not lead_hour.between(12, 35, inclusive="both").all():
+        raise ValueError(f"{name}: lead_hour가 12~35를 벗어납니다.")
+    if set(lead_hour.astype(int).unique()) != set(range(12, 36)):
+        raise ValueError(f"{name}: lead_hour 12~35가 모두 존재하지 않습니다.")
+
+    rows_per_issue = forecast_index.groupby("data_available_kst_dtm").size()
+    if not rows_per_issue.eq(24).all():
+        raise ValueError(f"{name}: 발행시각당 target 수가 24가 아닙니다.")
+
+    return {
+        "forecast_rows": int(len(forecast_index)),
+        "forecast_times": int(forecast_index["forecast_kst_dtm"].nunique()),
+        "issue_batches": int(forecast_index["data_available_kst_dtm"].nunique()),
+        "issue_batch_size": 24,
+        "lead_hour_min": int(lead_hour.min()),
+        "lead_hour_max": int(lead_hour.max()),
+    }
+
+
 def extract_grid_metadata(weather: pd.DataFrame, weather_source: str) -> pd.DataFrame:
     metadata = (
         weather[["grid_id", "latitude", "longitude"]]
@@ -297,6 +333,8 @@ def build_raw_master_package(project_root: Path) -> dict[str, object]:
         raise ValueError("LDAPS와 GFS Train 시간키가 다릅니다.")
     if not test_forecast_index.equals(extract_forecast_index(gfs_test)):
         raise ValueError("LDAPS와 GFS Test 시간키가 다릅니다.")
+    audit["train_forecast_index"] = audit_forecast_availability(train_forecast_index, "train_forecast_index")
+    audit["test_forecast_index"] = audit_forecast_availability(test_forecast_index, "test_forecast_index")
 
     ldaps_grid_metadata = extract_grid_metadata(ldaps_train, "ldaps")
     gfs_grid_metadata = extract_grid_metadata(gfs_train, "gfs")

@@ -26,3 +26,10 @@ logs/
 # Lecture generated feature blocks (regenerate locally)
 lectures/lecture06/lecture06_feature_candidates/shared/*.csv
 lectures/lecture06/lecture06_feature_candidates/group/*.csv
+
+# Lecture 08 generated model/prediction artifacts (regenerate locally)
+lectures/lecture08/lecture08_baselines/models/
+lectures/lecture08/lecture08_baselines/oof/
+lectures/lecture08/lecture08_baselines/test_predictions/
+lectures/lecture08/lecture08_baselines/submissions/
+lectures/lecture08/lecture08_baselines/reports/*.csv

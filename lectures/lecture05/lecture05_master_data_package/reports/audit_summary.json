@@ -31,6 +31,22 @@
     "duplicated_weather_keys": 0,
     "missing_cells": 0
   },
+  "train_forecast_index": {
+    "forecast_rows": 26304,
+    "forecast_times": 26304,
+    "issue_batches": 1096,
+    "issue_batch_size": 24,
+    "lead_hour_min": 12,
+    "lead_hour_max": 35
+  },
+  "test_forecast_index": {
+    "forecast_rows": 8760,
+    "forecast_times": 8760,
+    "issue_batches": 365,
+    "issue_batch_size": 24,
+    "lead_hour_min": 12,
+    "lead_hour_max": 35
+  },
   "labels": {
     "rows": 26304,
     "columns": 4,
