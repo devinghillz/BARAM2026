@@ -1,0 +1,106 @@
+{
+  "time_features": {
+    "row_scope": "forecast",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm"
+    ],
+    "feature_count": 11
+  },
+  "wind_grid_features": {
+    "row_scope": "forecast",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm"
+    ],
+    "feature_count": 571
+  },
+  "grid_statistics": {
+    "row_scope": "forecast",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm"
+    ],
+    "feature_count": 370
+  },
+  "physical_grid_features": {
+    "row_scope": "forecast",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm"
+    ],
+    "feature_count": 402
+  },
+  "center_nearest": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 116
+  },
+  "model_difference_center_nearest": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 8
+  },
+  "turbine_nearest": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 116
+  },
+  "model_difference_turbine_nearest": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 8
+  },
+  "idw_p1": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 116
+  },
+  "model_difference_idw_p1": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 8
+  },
+  "idw_p2": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 116
+  },
+  "model_difference_idw_p2": {
+    "row_scope": "forecast_group",
+    "key_columns": [
+      "forecast_kst_dtm",
+      "data_available_kst_dtm",
+      "group_id"
+    ],
+    "feature_count": 8
+  }
+}

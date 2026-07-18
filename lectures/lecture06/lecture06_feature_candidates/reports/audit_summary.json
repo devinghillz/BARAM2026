@@ -1,0 +1,165 @@
+{
+  "blocks": {
+    "time_features": {
+      "train_shape": [
+        26304,
+        13
+      ],
+      "test_shape": [
+        8760,
+        13
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 0,
+      "test_missing_rows": 0
+    },
+    "wind_grid_features": {
+      "train_shape": [
+        26304,
+        573
+      ],
+      "test_shape": [
+        8760,
+        573
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 368,
+      "test_missing_rows": 3
+    },
+    "grid_statistics": {
+      "train_shape": [
+        26304,
+        372
+      ],
+      "test_shape": [
+        8760,
+        372
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 240,
+      "test_missing_rows": 3
+    },
+    "physical_grid_features": {
+      "train_shape": [
+        26304,
+        404
+      ],
+      "test_shape": [
+        8760,
+        404
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 336,
+      "test_missing_rows": 3
+    },
+    "center_nearest": {
+      "train_shape": [
+        78912,
+        119
+      ],
+      "test_shape": [
+        26280,
+        119
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 210,
+      "test_missing_rows": 9
+    },
+    "model_difference_center_nearest": {
+      "train_shape": [
+        78912,
+        11
+      ],
+      "test_shape": [
+        26280,
+        11
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 27,
+      "test_missing_rows": 9
+    },
+    "turbine_nearest": {
+      "train_shape": [
+        78912,
+        119
+      ],
+      "test_shape": [
+        26280,
+        119
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 210,
+      "test_missing_rows": 9
+    },
+    "model_difference_turbine_nearest": {
+      "train_shape": [
+        78912,
+        11
+      ],
+      "test_shape": [
+        26280,
+        11
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 27,
+      "test_missing_rows": 9
+    },
+    "idw_p1": {
+      "train_shape": [
+        78912,
+        119
+      ],
+      "test_shape": [
+        26280,
+        119
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 210,
+      "test_missing_rows": 9
+    },
+    "model_difference_idw_p1": {
+      "train_shape": [
+        78912,
+        11
+      ],
+      "test_shape": [
+        26280,
+        11
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 27,
+      "test_missing_rows": 9
+    },
+    "idw_p2": {
+      "train_shape": [
+        78912,
+        119
+      ],
+      "test_shape": [
+        26280,
+        119
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 210,
+      "test_missing_rows": 9
+    },
+    "model_difference_idw_p2": {
+      "train_shape": [
+        78912,
+        11
+      ],
+      "test_shape": [
+        26280,
+        11
+      ],
+      "train_missing_cells": 0,
+      "test_missing_cells": 27,
+      "test_missing_rows": 9
+    }
+  },
+  "weight_sum_min": 0.9999999999999998,
+  "weight_sum_max": 1.0000000000000002,
+  "registry_rows": 1850,
+  "registry_label_used_any": false,
+  "registry_fit_required_any": false
+}

@@ -22,3 +22,7 @@ submissions/
 outputs/
 logs/
 *.log
+
+# Lecture generated feature blocks (regenerate locally)
+lectures/lecture06/lecture06_feature_candidates/shared/*.csv
+lectures/lecture06/lecture06_feature_candidates/group/*.csv
