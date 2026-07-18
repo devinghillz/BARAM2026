@@ -1,0 +1,93 @@
+{
+  "ldaps_train": {
+    "rows": 420864,
+    "columns": 35,
+    "unique_forecast_times": 26304,
+    "expected_grid_count": 16,
+    "duplicated_weather_keys": 0,
+    "missing_cells": 0
+  },
+  "gfs_train": {
+    "rows": 236736,
+    "columns": 40,
+    "unique_forecast_times": 26304,
+    "expected_grid_count": 9,
+    "duplicated_weather_keys": 0,
+    "missing_cells": 0
+  },
+  "ldaps_test": {
+    "rows": 140160,
+    "columns": 35,
+    "unique_forecast_times": 8760,
+    "expected_grid_count": 16,
+    "duplicated_weather_keys": 0,
+    "missing_cells": 752
+  },
+  "gfs_test": {
+    "rows": 78840,
+    "columns": 40,
+    "unique_forecast_times": 8760,
+    "expected_grid_count": 9,
+    "duplicated_weather_keys": 0,
+    "missing_cells": 0
+  },
+  "labels": {
+    "rows": 26304,
+    "columns": 4,
+    "duplicated_kst_dtm": 0,
+    "missing_by_target": {
+      "kpx_group_1": 104,
+      "kpx_group_2": 103,
+      "kpx_group_3": 8766
+    },
+    "valid_by_target": {
+      "kpx_group_1": 26200,
+      "kpx_group_2": 26201,
+      "kpx_group_3": 17538
+    },
+    "all_targets_available_rows": 17533
+  },
+  "wide_shapes": {
+    "ldaps_train_raw_wide": [
+      26304,
+      482
+    ],
+    "ldaps_test_raw_wide": [
+      8760,
+      482
+    ],
+    "gfs_train_raw_wide": [
+      26304,
+      317
+    ],
+    "gfs_test_raw_wide": [
+      8760,
+      317
+    ],
+    "weather_train_raw_wide": [
+      26304,
+      797
+    ],
+    "weather_test_raw_wide": [
+      8760,
+      797
+    ],
+    "master_train_with_labels": [
+      26304,
+      800
+    ],
+    "label_availability": [
+      26304,
+      4
+    ]
+  },
+  "wide_missing_cells": {
+    "weather_train_raw_wide": 0,
+    "weather_test_raw_wide": 752,
+    "master_train_with_labels": 8973
+  },
+  "turbine_metadata": {
+    "rows": 17,
+    "columns": 11
+  }
+}
