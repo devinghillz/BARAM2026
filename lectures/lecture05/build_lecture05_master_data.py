@@ -41,6 +41,9 @@ def read_weather_raw(path: str | Path) -> pd.DataFrame:
     for column in TIME_KEYS:
         result[column] = pd.to_datetime(result[column], errors="raise")
 
+    if result[WEATHER_KEY].isna().any().any():
+        raise ValueError(f"{path}: 시간 또는 grid key에 결측이 있습니다.")
+
     return result.sort_values(WEATHER_KEY).reset_index(drop=True)
 
 
@@ -69,10 +72,23 @@ def read_turbine_metadata(path: str | Path) -> pd.DataFrame:
     if missing_columns:
         raise ValueError(f"info.xlsx 필수 컬럼이 없습니다: {sorted(missing_columns)}")
 
-    result = info[INFO_COLUMNS].copy().reset_index(drop=True)
+    result = info[INFO_COLUMNS].copy().reset_index(drop=True).replace("", pd.NA)
     result["KPX그룹"] = result["KPX그룹"].ffill()
     result["그룹설비용량(MW)"] = result["그룹설비용량(MW)"].ffill()
+    coordinates = result["좌표(Google)"].map(parse_google_coordinate)
+    result["turbine_latitude"] = coordinates.map(lambda value: value[0])
+    result["turbine_longitude"] = coordinates.map(lambda value: value[1])
     return result
+
+
+def parse_google_coordinate(value: object) -> tuple[float, float]:
+    pattern = r"""^\s*(\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)'(\d+(?:\.\d+)?)"([NS])\s+(\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)'(\d+(?:\.\d+)?)"([EW])\s*$"""
+    match = re.match(pattern, str(value).strip())
+    if not match:
+        raise ValueError(f"좌표(Google)를 파싱할 수 없습니다: {value}")
+    values = match.groups()
+    to_decimal = lambda d, m, s, direction: (float(d) + float(m) / 60 + float(s) / 3600) * (-1 if direction in {"S", "W"} else 1)
+    return to_decimal(*values[:4]), to_decimal(*values[4:])
 
 
 def read_info_xlsx_without_openpyxl(path: str | Path) -> pd.DataFrame:
@@ -245,19 +261,9 @@ def build_label_availability(labels: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_table(frame: pd.DataFrame, path_without_suffix: Path) -> list[str]:
-    saved = []
     csv_path = path_without_suffix.with_suffix(".csv")
     frame.to_csv(csv_path, index=False, encoding="utf-8-sig")
-    saved.append(str(csv_path))
-
-    try:
-        parquet_path = path_without_suffix.with_suffix(".parquet")
-        frame.to_parquet(parquet_path, index=False)
-        saved.append(str(parquet_path))
-    except ImportError:
-        pass
-
-    return saved
+    return [str(csv_path)]
 
 
 def build_raw_master_package(project_root: Path) -> dict[str, object]:
@@ -393,41 +399,23 @@ def build_raw_master_package(project_root: Path) -> dict[str, object]:
     }
 
 
-def write_outputs(package: dict[str, object], output_dir: Path, save_full_package: bool = False) -> None:
+def write_outputs(package: dict[str, object], output_dir: Path, project_root: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    canonical_dir = output_dir / "canonical"
     metadata_dir = output_dir / "metadata"
     master_dir = output_dir / "master"
     reports_dir = output_dir / "reports"
     for directory in [metadata_dir, master_dir, reports_dir]:
         directory.mkdir(parents=True, exist_ok=True)
-    if save_full_package:
-        canonical_dir.mkdir(parents=True, exist_ok=True)
-
-    table_locations = {}
-    if save_full_package:
-        table_locations.update(
-            {
-                "ldaps_train_long": canonical_dir / "ldaps_train_long",
-                "gfs_train_long": canonical_dir / "gfs_train_long",
-                "ldaps_test_long": canonical_dir / "ldaps_test_long",
-                "gfs_test_long": canonical_dir / "gfs_test_long",
-                "weather_train_raw_wide": master_dir / "weather_train_raw_wide",
-                "labels": master_dir / "labels",
-            }
-        )
-    table_locations.update(
-        {
-            "train_forecast_index": metadata_dir / "train_forecast_index",
-            "test_forecast_index": metadata_dir / "test_forecast_index",
-            "ldaps_grid_metadata": metadata_dir / "ldaps_grid_metadata",
-            "gfs_grid_metadata": metadata_dir / "gfs_grid_metadata",
-            "turbine_metadata": metadata_dir / "turbine_metadata",
-            "weather_test_raw_wide": master_dir / "weather_test_raw_wide",
-            "label_availability": master_dir / "label_availability",
-            "master_train_with_labels": master_dir / "master_train_with_labels",
-        }
-    )
+    table_locations = {
+        "train_forecast_index": metadata_dir / "train_forecast_index",
+        "test_forecast_index": metadata_dir / "test_forecast_index",
+        "ldaps_grid_metadata": metadata_dir / "ldaps_grid_metadata",
+        "gfs_grid_metadata": metadata_dir / "gfs_grid_metadata",
+        "turbine_metadata": metadata_dir / "turbine_metadata",
+        "weather_test_raw_wide": master_dir / "weather_test_raw_wide",
+        "label_availability": master_dir / "label_availability",
+        "master_train_with_labels": master_dir / "master_train_with_labels",
+    }
 
     saved_files = {}
     tables: dict[str, pd.DataFrame] = package["tables"]
@@ -440,10 +428,15 @@ def write_outputs(package: dict[str, object], output_dir: Path, save_full_packag
     with (reports_dir / "audit_summary.json").open("w", encoding="utf-8") as file:
         json.dump(package["audit"], file, ensure_ascii=False, indent=2, default=str)
 
-    write_markdown_summary(package, reports_dir / "audit_summary.md", saved_files)
+    write_markdown_summary(package, reports_dir / "audit_summary.md", saved_files, project_root)
 
 
-def write_markdown_summary(package: dict[str, object], path: Path, saved_files: dict[str, list[str]]) -> None:
+def write_markdown_summary(
+    package: dict[str, object],
+    path: Path,
+    saved_files: dict[str, list[str]],
+    project_root: Path,
+) -> None:
     audit = package["audit"]
     manifest = package["manifest"]
     lines = [
@@ -485,9 +478,17 @@ def write_markdown_summary(package: dict[str, object], path: Path, saved_files: 
     )
     for name, files in saved_files.items():
         for file_path in files:
-            lines.append(f"- `{name}`: `{file_path}`")
+            lines.append(f"- `{name}`: `{relative_display_path(file_path, project_root)}`")
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def relative_display_path(path: str | Path, project_root: Path) -> str:
+    candidate = Path(path)
+    try:
+        return candidate.resolve().relative_to(project_root.resolve()).as_posix()
+    except ValueError:
+        return candidate.as_posix()
 
 
 def parse_args() -> argparse.Namespace:
@@ -498,18 +499,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(__file__).resolve().parent / "lecture05_master_data_package",
     )
-    parser.add_argument(
-        "--save-full-package",
-        action="store_true",
-        help="Also save normalized long tables and redundant intermediate train/label tables.",
-    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     package = build_raw_master_package(args.project_root)
-    write_outputs(package, args.output_dir, save_full_package=args.save_full_package)
+    write_outputs(package, args.output_dir, args.project_root)
     print(json.dumps(package["audit"]["wide_shapes"], ensure_ascii=False, indent=2))
 
 

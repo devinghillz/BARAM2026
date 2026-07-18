@@ -33,13 +33,7 @@ reports/
   audit_summary.md
 ```
 
-현재 기본 환경에는 `openpyxl`, `pyarrow`, `fastparquet`가 없으므로 CSV가 저장된다. Parquet 엔진을 설치한 환경에서 실행하면 같은 위치에 Parquet 파일도 추가 저장된다.
-
-원본 정렬 long 테이블과 중간 train weather/label 테이블까지 모두 저장하려면 다음 옵션을 붙인다.
-
-```bash
-python3 lectures/lecture05/build_lecture05_master_data.py --save-full-package
-```
+산출물은 CSV와 JSON으로 저장한다.
 
 ## 원칙
 

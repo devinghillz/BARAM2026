@@ -28,11 +28,11 @@
 
 ## Saved Files
 
-- `train_forecast_index`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/metadata/train_forecast_index.csv`
-- `test_forecast_index`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/metadata/test_forecast_index.csv`
-- `ldaps_grid_metadata`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/metadata/ldaps_grid_metadata.csv`
-- `gfs_grid_metadata`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/metadata/gfs_grid_metadata.csv`
-- `turbine_metadata`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/metadata/turbine_metadata.csv`
-- `weather_test_raw_wide`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/master/weather_test_raw_wide.csv`
-- `label_availability`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/master/label_availability.csv`
-- `master_train_with_labels`: `/Users/minju/PycharmProjects/BARAM2026/lectures/lecture05/lecture05_master_data_package/master/master_train_with_labels.csv`
+- `train_forecast_index`: `lectures/lecture05/lecture05_master_data_package/metadata/train_forecast_index.csv`
+- `test_forecast_index`: `lectures/lecture05/lecture05_master_data_package/metadata/test_forecast_index.csv`
+- `ldaps_grid_metadata`: `lectures/lecture05/lecture05_master_data_package/metadata/ldaps_grid_metadata.csv`
+- `gfs_grid_metadata`: `lectures/lecture05/lecture05_master_data_package/metadata/gfs_grid_metadata.csv`
+- `turbine_metadata`: `lectures/lecture05/lecture05_master_data_package/metadata/turbine_metadata.csv`
+- `weather_test_raw_wide`: `lectures/lecture05/lecture05_master_data_package/master/weather_test_raw_wide.csv`
+- `label_availability`: `lectures/lecture05/lecture05_master_data_package/master/label_availability.csv`
+- `master_train_with_labels`: `lectures/lecture05/lecture05_master_data_package/master/master_train_with_labels.csv`
