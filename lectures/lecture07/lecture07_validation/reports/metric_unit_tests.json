@@ -51,5 +51,9 @@
   {
     "test_name": "prediction_key_coverage",
     "passed": true
+  },
+  {
+    "test_name": "prediction_time_coverage",
+    "passed": true
   }
 ]

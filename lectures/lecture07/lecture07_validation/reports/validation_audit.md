@@ -1,6 +1,6 @@
 # Lecture 07 Validation Audit
 
-- Protocol version: `lecture07_v1`
+- Protocol version: `lecture07_v2`
 - Forecast rows: 26,304
 - Issue batch count: 1,096
 - Issue batch size: 24

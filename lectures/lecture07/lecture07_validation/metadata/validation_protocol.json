@@ -1,5 +1,5 @@
 {
-  "protocol_version": "lecture07_v1",
+  "protocol_version": "lecture07_v2",
   "split_axis": "data_available_kst_dtm",
   "validation_year": 2024,
   "primary_folds": [

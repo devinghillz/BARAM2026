@@ -12,7 +12,7 @@ from baram_metric import GROUP_IDS, audit_prediction_coverage, evaluate_baram_sc
 
 
 TIME_KEYS = ["forecast_kst_dtm", "data_available_kst_dtm"]
-PROTOCOL_VERSION = "lecture07_v1"
+PROTOCOL_VERSION = "lecture07_v2"
 EXPECTED_CAPACITY = {1: 21600.0, 2: 21600.0, 3: 21000.0}
 
 
@@ -224,15 +224,25 @@ def run_metric_unit_tests(capacity_by_group: dict[int, float]) -> list[dict[str,
     results.append({"test_name": "group_equal_weighting", "passed": True, "row_weighted_score": row_weighted_score})
 
     coverage_frame = unit_test_frame(0.0, capacity_by_group)
-    audit_prediction_coverage(coverage_frame, coverage_frame["forecast_kst_dtm"].drop_duplicates())
-    evaluate_concatenated_oof([coverage_frame], capacity_by_group)
+    expected_times = coverage_frame["forecast_kst_dtm"].drop_duplicates()
+    audit_prediction_coverage(coverage_frame, expected_times)
+    evaluate_concatenated_oof([coverage_frame], expected_times, capacity_by_group)
     missing_frame = coverage_frame.iloc[:-1].copy()
     try:
-        audit_prediction_coverage(missing_frame, coverage_frame["forecast_kst_dtm"].drop_duplicates())
+        audit_prediction_coverage(missing_frame, expected_times)
     except ValueError:
         results.append({"test_name": "prediction_key_coverage", "passed": True})
     else:
         raise ValueError("예측 key 완전성 테스트 실패")
+
+    missing_time = coverage_frame["forecast_kst_dtm"].min()
+    missing_time_frame = coverage_frame.loc[coverage_frame["forecast_kst_dtm"].ne(missing_time)].copy()
+    try:
+        evaluate_concatenated_oof([missing_time_frame], expected_times, capacity_by_group)
+    except ValueError:
+        results.append({"test_name": "prediction_time_coverage", "passed": True})
+    else:
+        raise ValueError("전체 시각 누락 검사가 실패했습니다.")
     return results
 
 

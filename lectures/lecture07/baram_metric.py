@@ -148,9 +148,9 @@ def audit_prediction_coverage(prediction_frame: pd.DataFrame, expected_forecast_
 
 def evaluate_concatenated_oof(
     fold_prediction_frames: list[pd.DataFrame],
+    expected_forecast_times: pd.Series,
     capacity_by_group: dict[int, float],
 ) -> tuple[dict[str, float], pd.DataFrame]:
     oof = pd.concat(fold_prediction_frames, axis=0, ignore_index=True)
-    expected_times = oof["forecast_kst_dtm"].drop_duplicates().sort_values()
-    audit_prediction_coverage(oof, expected_times)
+    audit_prediction_coverage(oof, expected_forecast_times)
     return evaluate_baram_score(oof, capacity_by_group)

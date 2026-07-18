@@ -1,5 +1,5 @@
 {
-  "protocol_version": "lecture07_v1",
+  "protocol_version": "lecture07_v2",
   "forecast_rows": 26304,
   "issue_batch_count": 1096,
   "issue_batch_size": 24,
