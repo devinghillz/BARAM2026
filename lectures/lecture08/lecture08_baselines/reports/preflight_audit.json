@@ -1,0 +1,40 @@
+{
+  "train_forecast": {
+    "forecast_rows": 26304,
+    "forecast_times": 26304,
+    "issue_batches": 1096,
+    "issue_batch_size": 24,
+    "lead_hour_min": 12,
+    "lead_hour_max": 35
+  },
+  "test_forecast": {
+    "forecast_rows": 8760,
+    "forecast_times": 8760,
+    "issue_batches": 365,
+    "issue_batch_size": 24,
+    "lead_hour_min": 12,
+    "lead_hour_max": 35
+  },
+  "train_shape": [
+    78912,
+    134
+  ],
+  "test_shape": [
+    26280,
+    133
+  ],
+  "feature_count": 130,
+  "train_missing": {
+    "rows": 78912,
+    "feature_count": 130,
+    "missing_cells": 0,
+    "rows_with_missing": 0
+  },
+  "test_missing": {
+    "rows": 26280,
+    "feature_count": 130,
+    "missing_cells": 210,
+    "rows_with_missing": 9
+  },
+  "expected_oof_time_count": 8760
+}

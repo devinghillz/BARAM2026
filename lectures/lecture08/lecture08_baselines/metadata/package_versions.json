@@ -1,0 +1,10 @@
+{
+  "python": "3.13.2",
+  "numpy": "2.4.3",
+  "pandas": "3.0.1",
+  "scikit_learn": "not_installed",
+  "lightgbm": "not_installed",
+  "xgboost": "not_installed",
+  "catboost": "not_installed",
+  "joblib": "not_installed"
+}

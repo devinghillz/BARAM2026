@@ -1,0 +1,20 @@
+{
+  "experiment_id": "lecture08_baseline_v1",
+  "validation_protocol": "lecture07_v2",
+  "models": [
+    "lightgbm",
+    "xgboost",
+    "catboost"
+  ],
+  "model_structure": "separate_by_group",
+  "seed": 42,
+  "feature_spec": "lecture08_baseline_v1",
+  "feature_count": 130,
+  "missing_policy": "native_missing",
+  "scada_used": false,
+  "prediction_clipping": false,
+  "primary_metric": "concatenated_oof_official_score",
+  "final_iteration_policy": "median_of_four_fold_best_iterations",
+  "test_disagreement_used_for_training": false,
+  "submission_count": 3
+}

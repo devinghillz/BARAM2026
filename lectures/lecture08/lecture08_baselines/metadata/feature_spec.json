@@ -1,0 +1,14 @@
+{
+  "feature_spec": "lecture08_baseline_v1",
+  "shared_blocks": [
+    "time_features",
+    "calendar_features"
+  ],
+  "group_blocks": [
+    "center_nearest"
+  ],
+  "feature_count": 130,
+  "scada_used": false,
+  "label_feature_used": false,
+  "fit_required_before_model": false
+}
