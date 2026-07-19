@@ -3,8 +3,17 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from src.config import GROUP_CAPACITY_KWH, GROUP_COLUMNS
 from src.data_loader import haversine_km, load_group_centroids
-from src.power_curve import build_month_hour_climatology, build_scada_monthly_curve, scada_prior_from_wind
+from src.power_curve import (
+    GROUP_TURBINE_COUNT,
+    build_group_scada_curves,
+    build_month_hour_climatology,
+    build_scada_monthly_curve,
+    build_group_type_curves,
+    scada_prior_from_wind,
+    type_prior_from_wind,
+)
 
 LDAPS_WIND_COLS = {
     "u10": "heightAboveGround_10_10u",
@@ -234,9 +243,52 @@ def add_power_curve_features(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _safe_series(s: pd.Series, clip: float = 1e6) -> pd.Series:
+    return s.replace([np.inf, -np.inf], np.nan).fillna(0).clip(-clip, clip)
+
+
+def add_enhanced_features(df: pd.DataFrame) -> pd.DataFrame:
+    """v12: 용량·계절·풍속 교차 피처."""
+    out = df.copy()
+    caps = out["group_id"].map(
+        {gid: GROUP_CAPACITY_KWH[col] for gid, col in enumerate(GROUP_COLUMNS, 1)}
+    )
+    if "scada_prior_kwh" in out.columns:
+        out["prior_util"] = _safe_series(out["scada_prior_kwh"] / caps)
+        if "clim_power_kwh" in out.columns:
+            out["clim_prior_ratio"] = _safe_series(
+                out["clim_power_kwh"] / (out["scada_prior_kwh"] + 100.0), clip=100
+            )
+    if "group_prior_kwh" in out.columns:
+        out["group_prior_util"] = _safe_series(out["group_prior_kwh"] / caps)
+        out["prior_gap"] = _safe_series(out["group_prior_kwh"] - out["scada_prior_kwh"])
+    if "clim_power_kwh" in out.columns:
+        out["clim_util"] = _safe_series(out["clim_power_kwh"] / caps)
+    ws = out.get("ldaps_ws_hub_blend", out.get("ldaps_ws10", pd.Series(0, index=out.index)))
+    ws = _safe_series(ws.fillna(0), clip=50)
+    out["winter_hour"] = (
+        out["month"].isin([1, 2, 3, 11]).astype(int) * out["hour"].isin([10, 20, 22]).astype(int)
+    )
+    out["winter_x_ws"] = out["month"].isin([1, 2, 3]).astype(int) * ws
+    out["worst_slot_x_ws"] = out["winter_hour"] * ws
+    if "ws10_diff_ldaps_gfs" in out.columns and "in_ws_sweet_spot" in out.columns:
+        out["diff_x_sweet"] = out["ws10_diff_ldaps_gfs"] * out["in_ws_sweet_spot"]
+    if "scada_prior_kwh" in out.columns:
+        out["prior_x_hub_ws"] = _safe_series(out["scada_prior_kwh"] * ws, clip=1e6)
+        out["prior_x_ws_sq"] = _safe_series(out["scada_prior_kwh"] * (ws ** 2), clip=1e6)
+    if "ldaps_wd10_sin" in out.columns:
+        out["wd_sin_x_ws"] = _safe_series(out["ldaps_wd10_sin"] * ws)
+        out["wd_cos_x_ws"] = _safe_series(out["ldaps_wd10_cos"] * ws)
+    out["n_turbines"] = out["group_id"].map(GROUP_TURBINE_COUNT)
+    out["is_group3"] = (out["group_id"] == 3).astype(np.int8)
+    return out
+
+
 def add_blend_and_scada_features(
     df: pd.DataFrame,
     scada_curve: pd.DataFrame,
+    type_curves: dict[str, pd.DataFrame] | None = None,
+    enhanced: bool = False,
 ) -> pd.DataFrame:
     out = df.copy()
     ws_cols = [c for c in out.columns if c.endswith("_ws10")]
@@ -248,17 +300,39 @@ def add_blend_and_scada_features(
 
     if "ldaps_ws10" in out.columns and "gfs_ws10" in out.columns:
         out["ws10_diff_ldaps_gfs"] = out["ldaps_ws10"] - out["gfs_ws10"]
-        out["ws10_ratio_ldaps_gfs"] = out["ldaps_ws10"] / (out["gfs_ws10"] + 1e-3)
+        if enhanced:
+            out["ws10_ratio_ldaps_gfs"] = _safe_series(
+                out["ldaps_ws10"] / (out["gfs_ws10"].abs() + 0.5), clip=20
+            )
+        else:
+            out["ws10_ratio_ldaps_gfs"] = out["ldaps_ws10"] / (out["gfs_ws10"] + 1e-3)
 
+    ws_for_prior = "blend_ws10"
     if "blend_ws10" in out.columns:
-        # scada prior: 그룹별 모델에서는 해당 소스 풍속 사용
-        ws_for_prior = "blend_ws10"
         if "ldaps_ws10" in out.columns and "gfs_ws10" not in out.columns:
             ws_for_prior = "ldaps_ws10"
         elif "gfs_ws10" in out.columns and "ldaps_ws10" not in out.columns:
             ws_for_prior = "gfs_ws10"
-        out["scada_prior_kwh"] = scada_prior_from_wind(out, scada_curve, ws_col=ws_for_prior)
-    return add_power_curve_features(out)
+
+    if "blend_ws10" in out.columns or ws_for_prior in out.columns:
+        # v05b 호환: 레거시 prior 유지
+        legacy_curve = scada_curve
+        if "group_id" in scada_curve.columns:
+            from src.power_curve import build_scada_monthly_curve
+
+            legacy_curve = build_scada_monthly_curve()
+        out["scada_prior_kwh"] = scada_prior_from_wind(out, legacy_curve, ws_col=ws_for_prior)
+        if enhanced and "group_id" in scada_curve.columns:
+            out["group_prior_kwh"] = scada_prior_from_wind(out, scada_curve, ws_col=ws_for_prior)
+    if type_curves is not None and "group_id" in out.columns:
+        tp = type_prior_from_wind(out, type_curves, ws_col=ws_for_prior if "blend_ws10" in out.columns else "ldaps_ws10")
+        for c in ["prior_vestas_kwh", "prior_unison_kwh", "type_prior_kwh"]:
+            if c in tp.columns:
+                out[c] = tp[c].to_numpy()
+    out = add_power_curve_features(out)
+    if enhanced:
+        return add_enhanced_features(out)
+    return out
 
 
 def build_group_frame(
@@ -267,12 +341,15 @@ def build_group_frame(
     clim_labels: pd.DataFrame | None = None,
     clim_before: pd.Timestamp | None = None,
     scada_curve: pd.DataFrame | None = None,
+    type_curves: dict[str, pd.DataFrame] | None = None,
+    enhanced: bool = False,
 ) -> pd.DataFrame:
     df = add_time_features(weather_groups)
     if clim_labels is not None:
         df = add_climatology_features(df, clim_labels, before=clim_before)
     if scada_curve is not None:
-        df = add_blend_and_scada_features(df, scada_curve)
+        tc = type_curves if enhanced else None
+        df = add_blend_and_scada_features(df, scada_curve, type_curves=tc, enhanced=enhanced)
 
     if labels is not None:
         long_labels = labels.melt(
@@ -318,6 +395,12 @@ def get_feature_columns(df: pd.DataFrame, prefixes: list[str] | None = None) -> 
         "hour_sin", "hour_cos", "month_sin", "month_cos",
         "ldaps_ws_hub_blend", "ldaps_ws_hub_blend_sq",
         "in_ws_sweet_spot", "ws_sweet_spot_x_prior",
+        "prior_util", "clim_util", "clim_prior_ratio",
+        "winter_hour", "winter_x_ws", "worst_slot_x_ws",
+        "diff_x_sweet", "prior_x_hub_ws", "prior_x_ws_sq",
+        "wd_sin_x_ws", "wd_cos_x_ws", "n_turbines", "is_group3",
+        "prior_vestas_kwh", "prior_unison_kwh", "type_prior_kwh",
+        "group_prior_kwh", "group_prior_util", "prior_gap",
     }
     both_only = {
         "ws10_diff_ldaps_gfs", "ws10_ratio_ldaps_gfs",
