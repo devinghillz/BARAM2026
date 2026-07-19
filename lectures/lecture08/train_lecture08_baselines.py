@@ -93,7 +93,13 @@ def run_year_block(model_name: str, train_frame: pd.DataFrame, year_assignment: 
         out["model_name"], out["y_pred"] = model_name, model.predict(to_float32_matrix(valid_part, feature_columns))
         predictions.append(out)
     summary, _ = metric.evaluate_concatenated_oof([pd.concat(predictions)[["forecast_kst_dtm", "group_id", "y_true", "y_pred"]]], expected_times, capacity)
-    return {"model_name": model_name, **summary}
+    return {
+        "model_name": model_name,
+        **summary,
+        "year_block_role": "diagnostic_only",
+        "year_block_independent": False,
+        "used_for_model_selection": False,
+    }
 
 
 def write_preflight(output_root: Path, feature_columns: list[str], capacity: dict[int, float], preflight: dict[str, object]) -> None:
@@ -123,8 +129,9 @@ def main() -> None:
         (args.output_dir / directory).mkdir(parents=True, exist_ok=True)
     metric = load_baram_metric(args.project_root)
     train_frame, _test_frame, feature_columns, assignment, year_assignment, capacity, preflight = prepare_inputs(args.project_root)
+    commit_info = source_commit(args.project_root)
     write_preflight(args.output_dir, feature_columns, capacity, preflight)
-    write_json(source_commit(args.project_root), args.output_dir / "metadata" / "source_commit.json")
+    write_json(commit_info, args.output_dir / "metadata" / "source_commit.json")
     if args.preflight_only:
         print(json.dumps({"preflight_passed": True, **preflight}, ensure_ascii=False, indent=2, default=str))
         return

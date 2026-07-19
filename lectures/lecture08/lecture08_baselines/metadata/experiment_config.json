@@ -15,6 +15,9 @@
   "prediction_clipping": false,
   "primary_metric": "concatenated_oof_official_score",
   "final_iteration_policy": "median_of_four_fold_best_iterations",
+  "year_block_role": "diagnostic_only",
+  "year_block_independent": false,
+  "year_block_used_for_model_selection": false,
   "test_disagreement_used_for_training": false,
   "submission_count": 3
 }

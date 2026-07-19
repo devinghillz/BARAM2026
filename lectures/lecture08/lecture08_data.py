@@ -244,6 +244,9 @@ def experiment_config() -> dict[str, object]:
         "prediction_clipping": False,
         "primary_metric": "concatenated_oof_official_score",
         "final_iteration_policy": "median_of_four_fold_best_iterations",
+        "year_block_role": "diagnostic_only",
+        "year_block_independent": False,
+        "year_block_used_for_model_selection": False,
         "test_disagreement_used_for_training": False,
         "submission_count": 3,
     }
