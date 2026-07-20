@@ -1,0 +1,116 @@
+{
+  "lightgbm": {
+    "row_count": 8760,
+    "columns": [
+      "forecast_id",
+      "forecast_kst_dtm",
+      "kpx_group_1",
+      "kpx_group_2",
+      "kpx_group_3"
+    ],
+    "forecast_id_unchanged": true,
+    "forecast_time_unchanged": true,
+    "nan_count": 0,
+    "inf_count": 0,
+    "prediction_clipping": false,
+    "by_group": {
+      "1": {
+        "min": -384.7184141196586,
+        "max": 21160.961892313568,
+        "mean": 7456.8174470928925,
+        "below_zero_count": 39,
+        "above_capacity_count": 0
+      },
+      "2": {
+        "min": -669.0157110530075,
+        "max": 20199.116497491006,
+        "mean": 7641.0905656671885,
+        "below_zero_count": 86,
+        "above_capacity_count": 0
+      },
+      "3": {
+        "min": 22.438787204168047,
+        "max": 19635.413742064302,
+        "mean": 6380.584123020696,
+        "below_zero_count": 0,
+        "above_capacity_count": 0
+      }
+    }
+  },
+  "xgboost": {
+    "row_count": 8760,
+    "columns": [
+      "forecast_id",
+      "forecast_kst_dtm",
+      "kpx_group_1",
+      "kpx_group_2",
+      "kpx_group_3"
+    ],
+    "forecast_id_unchanged": true,
+    "forecast_time_unchanged": true,
+    "nan_count": 0,
+    "inf_count": 0,
+    "prediction_clipping": false,
+    "by_group": {
+      "1": {
+        "min": -484.49761962890625,
+        "max": 20707.6328125,
+        "mean": 7478.234427785554,
+        "below_zero_count": 136,
+        "above_capacity_count": 0
+      },
+      "2": {
+        "min": -511.353515625,
+        "max": 20095.466796875,
+        "mean": 7759.8579218023715,
+        "below_zero_count": 88,
+        "above_capacity_count": 0
+      },
+      "3": {
+        "min": -93.72058868408203,
+        "max": 19375.4765625,
+        "mean": 6376.849068183986,
+        "below_zero_count": 12,
+        "above_capacity_count": 0
+      }
+    }
+  },
+  "catboost": {
+    "row_count": 8760,
+    "columns": [
+      "forecast_id",
+      "forecast_kst_dtm",
+      "kpx_group_1",
+      "kpx_group_2",
+      "kpx_group_3"
+    ],
+    "forecast_id_unchanged": true,
+    "forecast_time_unchanged": true,
+    "nan_count": 0,
+    "inf_count": 0,
+    "prediction_clipping": false,
+    "by_group": {
+      "1": {
+        "min": -618.5634460158608,
+        "max": 20608.107314030363,
+        "mean": 7420.453249778458,
+        "below_zero_count": 251,
+        "above_capacity_count": 0
+      },
+      "2": {
+        "min": -862.9838313960508,
+        "max": 20159.15999311867,
+        "mean": 7606.983172456118,
+        "below_zero_count": 236,
+        "above_capacity_count": 0
+      },
+      "3": {
+        "min": -463.59334311482144,
+        "max": 18961.03767546745,
+        "mean": 6376.796208528573,
+        "below_zero_count": 224,
+        "above_capacity_count": 0
+      }
+    }
+  }
+}

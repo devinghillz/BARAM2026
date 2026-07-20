@@ -1,0 +1,47 @@
+[
+  {
+    "model_name": "catboost",
+    "group_id": 1,
+    "final_iteration": 488
+  },
+  {
+    "model_name": "catboost",
+    "group_id": 2,
+    "final_iteration": 524
+  },
+  {
+    "model_name": "catboost",
+    "group_id": 3,
+    "final_iteration": 334
+  },
+  {
+    "model_name": "lightgbm",
+    "group_id": 1,
+    "final_iteration": 288
+  },
+  {
+    "model_name": "lightgbm",
+    "group_id": 2,
+    "final_iteration": 463
+  },
+  {
+    "model_name": "lightgbm",
+    "group_id": 3,
+    "final_iteration": 196
+  },
+  {
+    "model_name": "xgboost",
+    "group_id": 1,
+    "final_iteration": 386
+  },
+  {
+    "model_name": "xgboost",
+    "group_id": 2,
+    "final_iteration": 239
+  },
+  {
+    "model_name": "xgboost",
+    "group_id": 3,
+    "final_iteration": 198
+  }
+]

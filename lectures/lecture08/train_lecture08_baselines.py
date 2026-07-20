@@ -69,11 +69,15 @@ def evaluate_model_oof(oof: pd.DataFrame, expected_times: pd.Series, capacity_by
     return metric.evaluate_concatenated_oof([score_input], expected_times, capacity_by_group)
 
 
+def leaderboard_summary(summary: dict[str, float]) -> dict[str, float]:
+    return {key: value for key, value in summary.items() if key != "nmae"}
+
+
 def evaluate_fold_scores(oof: pd.DataFrame, capacity_by_group: dict[int, float], metric) -> pd.DataFrame:
     rows = []
     for fold_name, part in oof.groupby("fold_name", sort=True):
         summary, _ = metric.evaluate_baram_score(part[["forecast_kst_dtm", "group_id", "y_true", "y_pred"]], capacity_by_group)
-        rows.append({"fold_name": fold_name, **summary})
+        rows.append({"fold_name": fold_name, **leaderboard_summary(summary)})
     return pd.DataFrame(rows)
 
 
@@ -95,7 +99,7 @@ def run_year_block(model_name: str, train_frame: pd.DataFrame, year_assignment: 
     summary, _ = metric.evaluate_concatenated_oof([pd.concat(predictions)[["forecast_kst_dtm", "group_id", "y_true", "y_pred"]]], expected_times, capacity)
     return {
         "model_name": model_name,
-        **summary,
+        **leaderboard_summary(summary),
         "year_block_role": "diagnostic_only",
         "year_block_independent": False,
         "used_for_model_selection": False,
@@ -109,9 +113,6 @@ def write_preflight(output_root: Path, feature_columns: list[str], capacity: dic
     write_json(feature_columns, output_root / "metadata" / "feature_columns.json")
     write_json(capacity, output_root / "metadata" / "capacity_by_group.json")
     write_json(preflight, output_root / "reports" / "preflight_audit.json")
-    lines = ["# Lecture 08 Baseline Audit", "", f"- Feature count: {preflight['feature_count']:,}", f"- Train shape: {preflight['train_shape']}", f"- Test shape: {preflight['test_shape']}", f"- Expected OOF times: {preflight['expected_oof_time_count']:,}"]
-    (output_root / "reports" / "baseline_audit.md").parent.mkdir(parents=True, exist_ok=True)
-    (output_root / "reports" / "baseline_audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
@@ -147,7 +148,7 @@ def main() -> None:
         training_log["oof_score"] = summary["score"]
         logs.append(training_log)
         fold_metric_rows.append(fold_scores.assign(model_name=model_name))
-        oof_summary_rows.append({"model_name": model_name, **summary, "fold_score_mean": float(fold_scores["score"].mean()), "fold_score_std": float(fold_scores["score"].std(ddof=0)), "fold_score_min": float(fold_scores["score"].min()), "worst_group_score": float(group_metrics["score"].min())})
+        oof_summary_rows.append({"model_name": model_name, **leaderboard_summary(summary), "fold_score_mean": float(fold_scores["score"].mean()), "fold_score_std": float(fold_scores["score"].std(ddof=0)), "fold_score_min": float(fold_scores["score"].min()), "worst_group_score": float(group_metrics["score"].min())})
         oof_by_model[model_name] = oof
 
     training_log = pd.concat(logs, ignore_index=True)
@@ -164,12 +165,12 @@ def main() -> None:
     year_metrics = pd.DataFrame(year_rows)
     oof_summary = pd.DataFrame(oof_summary_rows).merge(year_metrics[["model_name", "score"]].rename(columns={"score": "year_block_score"}), on="model_name", how="left")
     oof_summary.to_csv(args.output_dir / "reports" / "oof_summary.csv", index=False, encoding="utf-8-sig")
+    write_json(oof_summary.to_dict("records"), args.output_dir / "reports" / "oof_summary.json")
     year_metrics.to_csv(args.output_dir / "reports" / "year_block_metrics.csv", index=False, encoding="utf-8-sig")
     if set(args.models) == set(MODEL_NAMES):
         oof_disagreement = build_oof_disagreement(oof_by_model, capacity)
         oof_disagreement.to_csv(args.output_dir / "oof" / "oof_disagreement.csv", index=False, encoding="utf-8-sig")
         write_json(disagreement_summary(oof_disagreement, None), args.output_dir / "reports" / "disagreement_summary.json")
-    pd.DataFrame(columns=["submission_name", "model_name", "local_oof_score", "fold_score_mean", "fold_score_std", "fold_score_min", "worst_group_score", "year_block_score", "public_score", "submission_date", "notes"]).to_csv(args.output_dir / "reports" / "public_submission_log.csv", index=False, encoding="utf-8-sig")
     print(json.dumps({"trained_models": args.models, "oof_summary": oof_summary.to_dict("records")}, ensure_ascii=False, indent=2, default=str))
 
 

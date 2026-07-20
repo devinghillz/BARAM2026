@@ -2,9 +2,9 @@
   "python": "3.13.2",
   "numpy": "2.4.3",
   "pandas": "3.0.1",
-  "scikit_learn": "not_installed",
-  "lightgbm": "not_installed",
-  "xgboost": "not_installed",
-  "catboost": "not_installed",
-  "joblib": "not_installed"
+  "scikit_learn": "1.9.0",
+  "lightgbm": "4.7.0",
+  "xgboost": "3.3.0",
+  "catboost": "1.2.10",
+  "joblib": "1.5.3"
 }

@@ -1,0 +1,35 @@
+[
+  {
+    "model_name": "lightgbm",
+    "score": 0.5967109498678942,
+    "one_minus_nmae": 0.868641972257859,
+    "ficr": 0.3247799274779293,
+    "fold_score_mean": 0.5989175812973684,
+    "fold_score_std": 0.0121144069188577,
+    "fold_score_min": 0.5817523520850102,
+    "worst_group_score": 0.5608934744222358,
+    "year_block_score": 0.6039164001023339
+  },
+  {
+    "model_name": "xgboost",
+    "score": 0.5974415137977215,
+    "one_minus_nmae": 0.8688407038470107,
+    "ficr": 0.3260423237484322,
+    "fold_score_mean": 0.59932944172569,
+    "fold_score_std": 0.0102540521208446,
+    "fold_score_min": 0.5865435762327823,
+    "worst_group_score": 0.5620205343076655,
+    "year_block_score": 0.603535097885814
+  },
+  {
+    "model_name": "catboost",
+    "score": 0.5903963771595653,
+    "one_minus_nmae": 0.8681527731922027,
+    "ficr": 0.3126399811269278,
+    "fold_score_mean": 0.5925629979792534,
+    "fold_score_std": 0.0125744495183628,
+    "fold_score_min": 0.5755309042012535,
+    "worst_group_score": 0.5641796264810578,
+    "year_block_score": 0.5996452748551124
+  }
+]
